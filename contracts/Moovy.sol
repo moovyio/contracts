@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Moovy is ERC20Capped, Ownable, ReentrancyGuard {
+contract Moovy is ERC20Capped, Ownable {
 
   address constant private ADVISORS = 0x00781266C0e25bfd385685a5F4c1c9C9D0D47cDc;
   address constant private TEAM_MEMBERS = 0xA911361263eacC9579eaA29bF14056Ee887968DF;
@@ -13,11 +12,10 @@ contract Moovy is ERC20Capped, Ownable, ReentrancyGuard {
   address constant private ECOSYSTEM = 0x0bA88421c5F99184F060daB9158A4cEfBcF1F3c1;
   address constant private MARKETING = 0xAA2C53096aFd874B848e420173b9f7bE4Db16107;
 
-  uint8 constant public DECIMALS = 18;
   uint256 constant private MAX_BPS = 10000;
-  uint256 constant private MAX_TOKEN_SUPPLY = 100_000_000 * 10**DECIMALS;
+  uint256 constant private MAX_TOKEN_SUPPLY = 100_000_000 ether;
 
-  uint256 constant private TOKEN_SALE_SUPPLY = 27_000_000 * 10**DECIMALS;
+  uint256 constant private TOKEN_SALE_SUPPLY = 27_000_000 ether;
 
   uint256 public TGETimestamp;
 
@@ -47,31 +45,31 @@ contract Moovy is ERC20Capped, Ownable, ReentrancyGuard {
     groups[AllocationGroup.Advisors].vestingPeriod = 18 * 30 days;
     groups[AllocationGroup.Advisors].initialUnlock = 500;
     groups[AllocationGroup.Advisors].receiver = ADVISORS;
-    groups[AllocationGroup.Advisors].balance = 2_000_000 * 10**DECIMALS;
+    groups[AllocationGroup.Advisors].balance = 2_000_000 ether;
 
     groups[AllocationGroup.TeamMembers].cliff = 2 * 30 days;
     groups[AllocationGroup.TeamMembers].vestingPeriod = 7 * 30 days;
     groups[AllocationGroup.TeamMembers].initialUnlock = 2000;
     groups[AllocationGroup.TeamMembers].receiver = TEAM_MEMBERS;
-    groups[AllocationGroup.TeamMembers].balance = 12_000_000 * 10**DECIMALS;
+    groups[AllocationGroup.TeamMembers].balance = 12_000_000 ether;
 
     groups[AllocationGroup.PlayToEarn].cliff = 0;
     groups[AllocationGroup.PlayToEarn].vestingPeriod = 6 * 30 days;
     groups[AllocationGroup.PlayToEarn].initialUnlock = 2500;
     groups[AllocationGroup.PlayToEarn].receiver = PLAY_TO_EARN;
-    groups[AllocationGroup.PlayToEarn].balance = 30_000_000 * 10**DECIMALS;
+    groups[AllocationGroup.PlayToEarn].balance = 30_000_000 ether;
 
     groups[AllocationGroup.EcosystemFund].cliff = 0;
     groups[AllocationGroup.EcosystemFund].vestingPeriod = 12 * 30 days;
     groups[AllocationGroup.EcosystemFund].initialUnlock = 2000;
     groups[AllocationGroup.EcosystemFund].receiver = ECOSYSTEM;
-    groups[AllocationGroup.EcosystemFund].balance = 15_000_000 * 10**DECIMALS;
+    groups[AllocationGroup.EcosystemFund].balance = 15_000_000 ether;
 
     groups[AllocationGroup.Marketing].cliff = 9 * 30 days;
     groups[AllocationGroup.Marketing].vestingPeriod = 27 * 30 days;
     groups[AllocationGroup.Marketing].initialUnlock = 1500;
     groups[AllocationGroup.Marketing].receiver = MARKETING;
-    groups[AllocationGroup.Marketing].balance = 14_000_000 * 10**DECIMALS;
+    groups[AllocationGroup.Marketing].balance = 14_000_000 ether;
 
   }
 
@@ -101,7 +99,7 @@ contract Moovy is ERC20Capped, Ownable, ReentrancyGuard {
     return availableTokens;
   }
 
-  function distribute(AllocationGroup group) public onlyOwner nonReentrant {
+  function distribute(AllocationGroup group) public onlyOwner {
     require(block.timestamp >= (TGETimestamp + groups[group].cliff), "[distribute]: Distribution is not started yet");
     GroupData storage groupData = groups[group];
     uint256 vestingAmount = calculateVestingAmount(group);

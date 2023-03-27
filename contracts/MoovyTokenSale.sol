@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Moovy.sol";
 
-contract MoovyTokenSale is Ownable, ReentrancyGuard {
+contract MoovyTokenSale is Ownable {
+
+    using SafeERC20 for IERC20;
 
     struct AccountData {
         uint256 balance;
@@ -35,7 +37,7 @@ contract MoovyTokenSale is Ownable, ReentrancyGuard {
     mapping(RoundType => RoundData) roundData;
 
     Moovy immutable public token;
-    ERC20 immutable public payToken;
+    IERC20 immutable public payToken;
     uint256 immutable public pricePerToken;
     uint256 immutable public tokenSaleSupply;
     uint256 immutable public maxIGOSupply;
@@ -50,12 +52,12 @@ contract MoovyTokenSale is Ownable, ReentrancyGuard {
     event Buy(address buyer, uint256 value);
     event Claim(RoundType round, address claimer, uint256 claimedValue);
 
-    constructor(ERC20 _payToken, Moovy _token) {
+    constructor(IERC20 _payToken, Moovy _token) {
         token = _token;
         payToken = _payToken;
-        pricePerToken = 37 * 10**_payToken.decimals() / 100;
-        tokenSaleSupply = 27_000_000 * 10**_token.DECIMALS();
-        maxIGOSupply = 1_000_000 * 10**_token.DECIMALS();
+        pricePerToken = 37 ether / 100;
+        tokenSaleSupply = 27_000_000 ether;
+        maxIGOSupply = 1_000_000 ether;
 
         roundData[RoundType.Seed].cliff = 2 * 30 days;
         roundData[RoundType.Seed].vestingPeriod = 8 * 30 days;
@@ -76,7 +78,7 @@ contract MoovyTokenSale is Ownable, ReentrancyGuard {
         emit StartIGO();
     }
 
-    function buy(uint256 value) external nonReentrant {
+    function buy(uint256 value) external {
         require(isIGOStarted, "[buy]: IGO is not started");
         require(_tokenSaleEndTimestamp == 0, "[buy]: token sale is ended");
         require(tokenSold + value <= maxIGOSupply, "[buy]: max token supply exceeded");
@@ -84,7 +86,7 @@ contract MoovyTokenSale is Ownable, ReentrancyGuard {
         RoundData storage round = roundData[RoundType.IGO];
         address sender = msg.sender;
 
-        uint256 requiredValue = value * pricePerToken / 10**token.DECIMALS();
+        uint256 requiredValue = value * pricePerToken / 1 ether;
 
         payToken.transferFrom(sender, owner(), requiredValue);
 
@@ -114,13 +116,13 @@ contract MoovyTokenSale is Ownable, ReentrancyGuard {
             round.accounts[accounts[i].account].balance = accounts[i].balance;
             round.accounts[accounts[i].account].index = round.accountList.length;
             round.accountList.push(accounts[i].account);
-            unchecked {
-                i++;
-            }
+        unchecked {
+            i++;
+        }
         }
     }
 
-    function claim(RoundType round) external nonReentrant {
+    function claim(RoundType round) external {
         address sender = msg.sender;
         uint256 vestingAmount = calculateVestingAmount(round, sender);
         bool success = token.transfer(sender, vestingAmount);

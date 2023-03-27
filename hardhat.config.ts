@@ -11,7 +11,7 @@ import process from "process";
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: "0.8.9",
   networks: {
     mumbai: {
       url: "https://rpc.ankr.com/polygon_mumbai",
